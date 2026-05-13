@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LaptopLens — AI Price Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    /* ── DESIGN TOKENS ─────────────────────────────────── */
+    :root {
+      --bg:         #0a0b0f;
+      --surface:    #111318;
+      --surface2:   #181c24;
+      --border:     rgba(255,255,255,0.07);
+      --border-h:   rgba(255,255,255,0.15);
+      --accent:     #7DF9C2;
+      --accent2:    #4FC3F7;
+      --accent3:    #FF6B8A;
+      --gold:       #F5C518;
+      --text:       #E8EAF0;
+      --muted:      #6B7280;
+      --card-glow:  0 0 60px rgba(125,249,194,0.04);
+      --font-head:  'Syne', sans-serif;
+      --font-body:  'DM Sans', sans-serif;
+      --radius:     16px;
+      --radius-sm:  10px;
+    }
+
+    /* ── RESET ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-weight: 300;
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── ANIMATED BACKGROUND ───────────────────────────── */
+    .bg-mesh {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 60% 50% at 15% 20%, rgba(125,249,194,0.06) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 85% 70%, rgba(79,195,247,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 60% at 50% 90%, rgba(255,107,138,0.04) 0%, transparent 70%);
+    }
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    /* ── LAYOUT ────────────────────────────────────────── */
+    .wrapper {
+      position: relative; z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── HEADER ────────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 0 0;
+      margin-bottom: 64px;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .logo-text {
+      font-family: var(--font-head);
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .logo-text span { color: var(--accent); }
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+    }
+
+    /* ── HERO ──────────────────────────────────────────── */
+    .hero {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(125,249,194,0.08);
+      border: 1px solid rgba(125,249,194,0.2);
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 24px;
+    }
+    .hero-tag::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+    h1 {
+      font-family: var(--font-head);
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+    h1 .grad {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--muted);
+      max-width: 480px;
+      margin: 0 auto 32px;
+    }
+    .model-chips {
+      display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+    }
+    .model-chip {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.78rem; font-weight: 500;
+      color: var(--muted);
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+    }
+    .model-chip:hover, .model-chip.active {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(125,249,194,0.07);
+    }
+    .model-chip.active { color: var(--accent); }
+    .chip-acc {
+      font-size: 0.68rem;
+      color: var(--accent);
+      opacity: 0.8;
+    }
+
+    /* ── MAIN GRID ─────────────────────────────────────── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── CARD ──────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: var(--card-glow);
+      transition: border-color 0.3s;
+    }
+    .card:hover { border-color: var(--border-h); }
+    .card-title {
+      font-family: var(--font-head);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 24px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title::before {
+      content: '';
+      display: block; width: 18px; height: 2px;
+      background: var(--accent);
+    }
+
+    /* ── FORM GRID ─────────────────────────────────────── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .field.full { grid-column: 1 / -1; }
+    label {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+    select, input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      font-weight: 400;
+      padding: 12px 16px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 40px;
+    }
+    select:focus, input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(125,249,194,0.08);
+    }
+    select option { background: #181c24; }
+
+    /* ── PREDICT BUTTON ────────────────────────────────── */
+    .btn-predict {
+      width: 100%;
+      margin-top: 24px;
+      padding: 16px 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #0a0b0f;
+      font-family: var(--font-head);
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      position: relative; overflow: hidden;
+    }
+    .btn-predict::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,0.15);
+      transform: translateX(-100%);
+      transition: transform 0.4s ease;
+    }
+    .btn-predict:hover::before { transform: translateX(100%); }
+    .btn-predict:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 32px rgba(125,249,194,0.25);
+    }
+    .btn-predict:active { transform: translateY(0); }
+    .btn-predict.loading { opacity: 0.7; pointer-events: none; }
+
+    /* ── RESULT PANEL ──────────────────────────────────── */
+    .result-panel { position: sticky; top: 24px; }
+
+    .price-display {
+      text-align: center;
+      padding: 36px 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      min-height: 180px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .price-display::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.6s ease;
+    }
+    .price-display.revealed::before { transform: scaleX(1); }
+
+    .price-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .price-value {
+      font-family: var(--font-head);
+      font-size: 3.2rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.5s, transform 0.5s;
+    }
+    .price-display.revealed .price-value {
+      opacity: 1; transform: translateY(0);
+    }
+    .price-range {
+      font-size: 0.8rem;
+      color: var(--muted);
+      opacity: 0;
+      transition: opacity 0.5s 0.15s;
+    }
+    .price-display.revealed .price-range { opacity: 1; }
+    .price-empty {
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+    .price-empty svg { display: block; margin: 0 auto 12px; opacity: 0.3; }
+
+    /* ── METRICS ───────────────────────────────────────── */
+    .metrics-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+      margin-bottom: 20px;
+    }
+    .metric-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+    }
+    .metric-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .metric-value {
+      font-family: var(--font-head);
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .metric-value.accent { color: var(--accent); }
+    .metric-value.gold { color: var(--gold); }
+
+    /* ── MODEL COMPARISON ──────────────────────────────── */
+    .model-bars { display: flex; flex-direction: column; gap: 10px; }
+    .model-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .model-name {
+      font-size: 0.78rem; color: var(--muted);
+      width: 130px; flex-shrink: 0;
+    }
+    .bar-track {
+      flex: 1; height: 6px;
+      background: var(--surface2);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      width: 0;
+      transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    }
+    .bar-pct {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--muted);
+      width: 42px; text-align: right; flex-shrink: 0;
+    }
+
+    /* ── HISTORY ───────────────────────────────────────── */
+    .history-list {
+      display: flex; flex-direction: column; gap: 8px;
+      max-height: 220px; overflow-y: auto;
+    }
+    .history-list::-webkit-scrollbar { width: 4px; }
+    .history-list::-webkit-scrollbar-track { background: transparent; }
+    .history-list::-webkit-scrollbar-thumb { background: var(--border-h); border-radius: 2px; }
+    .history-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+    }
+    .history-specs { color: var(--muted); }
+    .history-price {
+      font-family: var(--font-head);
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .history-empty {
+      font-size: 0.82rem; color: var(--muted);
+      text-align: center; padding: 24px;
+    }
+
+    /* ── FOOTER ────────────────────────────────────────── */
+    footer {
+      margin-top: 80px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .footer-logo {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 0.9rem;
+    }
+    .footer-logo span { color: var(--accent); }
+    .footer-note {
+      font-size: 0.75rem; color: var(--muted);
+    }
+
+    /* ── ANIMATIONS ────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .animate-up {
+      animation: fadeUp 0.6s cubic-bezier(0.4,0,0.2,1) both;
+    }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+
+    /* ── SPINNER ───────────────────────────────────────── */
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(0,0,0,0.3);
+      border-top-color: rgba(0,0,0,0.8);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    .loading .spinner { display: block; }
+    .loading .btn-icon { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── TOAST ─────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent3);
+      border-radius: var(--radius-sm);
+      padding: 12px 20px;
+      font-size: 0.85rem;
+      color: var(--accent3);
+      z-index: 9999;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── SEPARATOR ─────────────────────────────────────── */
+    .sep { height: 1px; background: var(--border); margin: 24px 0; }
+  </style>
+</head>
+<body>
+
+<div class="bg-mesh"></div>
+<div class="bg-grid"></div>
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header class="animate-up">
+    <div class="logo">
+      <div class="logo-icon">💻</div>
+      <div class="logo-text">Laptop<span>Lens</span></div>
+    </div>
+    <div class="badge">AI Price Intelligence</div>
+  </header>
+
+  <!-- HERO -->
+  <div class="hero animate-up delay-1">
+    <div class="hero-tag">Machine Learning · 4 Models</div>
+    <h1>Predict Laptop Prices<br>with <span class="grad">AI Precision</span></h1>
+    <p class="hero-sub">Enter specs, pick your model, and get instant market-accurate price predictions powered by ensemble ML.</p>
+
+    <div class="model-chips" id="modelChips">
+      {% for key, acc in model_accuracies.items() %}
+      <button class="model-chip {% if loop.first %}active{% endif %}"
+              data-model="{{ key }}"
+              onclick="selectModel(this)">
+        {{ key.replace('_', ' ').title() }}
+        <span class="chip-acc">{{ acc }}%</span>
+      </button>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid animate-up delay-2">
+
+    <!-- LEFT: FORM CARD -->
+    <div>
+      <div class="card">
+        <div class="card-title">Laptop Specifications</div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label>Brand / Company</label>
+            <select id="company">
+              {% for c in companies %}
+              <option value="{{ c }}">{{ c }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Laptop Type</label>
+            <select id="type_name">
+              {% for t in type_names %}
+              <option value="{{ t }}">{{ t }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Screen Size (inches)</label>
+            <select id="inches">
+              {% for s in screen_sizes %}
+              <option value="{{ s }}" {% if s == '15.6' %}selected{% endif %}>{{ s }}"</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label>RAM</label>
+            <select id="ram">
+              {% for r in ram_options %}
+              <option value="{{ r }}" {% if r == '8GB' %}selected{% endif %}>{{ r }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field full">
+            <label>GPU / Graphics Card</label>
+            <select id="gpu">
+              {% for g in gpu_options %}
+              <option value="{{ g }}">{{ g }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Operating System</label>
+            <select id="opsys">
+              {% for o in opsys_options %}
+              <option value="{{ o }}">{{ o }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Weight</label>
+            <select id="weight">
+              {% for w in weight_options %}
+              <option value="{{ w }}" {% if w == '2.0kg' %}selected{% endif %}>{{ w }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <input type="hidden" id="selectedModel" value="gradient_boosting">
+
+        <button class="btn-predict" id="predictBtn" onclick="predict()">
+          <span class="btn-icon">⚡</span>
+          <div class="spinner"></div>
+          <span>Predict Price</span>
+        </button>
+      </div>
+
+      <!-- MODEL COMPARISON CARD -->
+      <div class="card" style="margin-top: 24px;">
+        <div class="card-title">Model Accuracy Comparison</div>
+        <div class="model-bars" id="modelBars">
+          {% for key, acc in model_accuracies.items() %}
+          <div class="model-row">
+            <div class="model-name">{{ key.replace('_', ' ').title() }}</div>
+            <div class="bar-track">
+              <div class="bar-fill" data-pct="{{ acc }}"></div>
+            </div>
+            <div class="bar-pct">{{ acc }}%</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: RESULT PANEL -->
+    <div class="result-panel animate-up delay-3">
+
+      <!-- PRICE DISPLAY -->
+      <div class="price-display" id="priceDisplay">
+        <div class="price-empty" id="priceEmpty">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M20 12v8l5 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          Enter specs & click<br>Predict Price
+        </div>
+        <div style="display:none" id="priceResult">
+          <div class="price-label">Estimated Market Price</div>
+          <div class="price-value" id="priceValue">€0</div>
+          <div class="price-range" id="priceRange">Range: €0 – €0</div>
+        </div>
+      </div>
+
+      <!-- METRICS -->
+      <div class="metrics-grid" id="metricsGrid">
+        <div class="metric-card">
+          <div class="metric-label">Model Used</div>
+          <div class="metric-value" id="metricModel" style="font-size:0.95rem">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Accuracy</div>
+          <div class="metric-value accent" id="metricAccuracy">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Price (Low)</div>
+          <div class="metric-value" id="metricLow">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Price (High)</div>
+          <div class="metric-value gold" id="metricHigh">—</div>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+
+      <!-- HISTORY -->
+      <div class="card" style="background: transparent; border: 1px solid var(--border); padding: 24px;">
+        <div class="card-title">Prediction History</div>
+        <div class="history-list" id="historyList">
+          <div class="history-empty">No predictions yet</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">Laptop<span>Lens</span></div>
+    <div class="footer-note">Powered by SVM · XGBoost · CatBoost · Gradient Boosting &nbsp;·&nbsp; Laptop Dataset 1,303 entries</div>
+  </footer>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // Animate bars on load
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.querySelectorAll('.bar-fill').forEach(bar => {
+        bar.style.width = bar.dataset.pct + '%';
+      });
+    }, 400);
+  });
+
+  let selectedModel = 'gradient_boosting';
+  let history = [];
+
+  function selectModel(el) {
+    document.querySelectorAll('.model-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    selectedModel = el.dataset.model;
+    document.getElementById('selectedModel').value = selectedModel;
+  }
+
+  async function predict() {
+    const btn = document.getElementById('predictBtn');
+    btn.classList.add('loading');
+
+    const payload = {
+      company:   document.getElementById('company').value,
+      type_name: document.getElementById('type_name').value,
+      inches:    document.getElementById('inches').value,
+      ram:       document.getElementById('ram').value,
+      gpu:       document.getElementById('gpu').value,
+      opsys:     document.getElementById('opsys').value,
+      weight:    document.getElementById('weight').value,
+      model:     selectedModel
+    };
+
+    try {
+      const res = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        showResult(data, payload);
+        addHistory(data, payload);
+      } else {
+        showToast('Prediction failed: ' + data.error);
+      }
+    } catch (e) {
+      showToast('Network error. Is the server running?');
+    } finally {
+      btn.classList.remove('loading');
+    }
+  }
+
+  function showResult(data, payload) {
+    const display = document.getElementById('priceDisplay');
+    document.getElementById('priceEmpty').style.display = 'none';
+    document.getElementById('priceResult').style.display = 'block';
+
+    // Animate price count up
+    const targetPrice = data.price;
+    const priceEl = document.getElementById('priceValue');
+    let start = 0;
+    const duration = 700;
+    const startTime = performance.now();
+
+    function update(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = start + (targetPrice - start) * eased;
+      priceEl.textContent = '€' + current.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      if (progress < 1) requestAnimationFrame(update);
+      else priceEl.textContent = '€' + targetPrice.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    requestAnimationFrame(update);
+
+    document.getElementById('priceRange').textContent =
+      `Range: €${data.price_low.toLocaleString()} – €${data.price_high.toLocaleString()}`;
+
+    display.classList.add('revealed');
+
+    // Metrics
+    document.getElementById('metricModel').textContent = data.model;
+    document.getElementById('metricAccuracy').textContent = data.accuracy + '%';
+    document.getElementById('metricLow').textContent = '€' + data.price_low.toLocaleString();
+    document.getElementById('metricHigh').textContent = '€' + data.price_high.toLocaleString();
+  }
+
+  function addHistory(data, payload) {
+    history.unshift({ data, payload, ts: new Date() });
+    if (history.length > 8) history.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('historyList');
+    if (history.length === 0) {
+      list.innerHTML = '<div class="history-empty">No predictions yet</div>';
+      return;
+    }
+    list.innerHTML = history.map(h => `
+      <div class="history-item">
+        <div class="history-specs">${h.payload.company} · ${h.payload.ram} · ${h.payload.type_name}</div>
+        <div class="history-price">€${h.data.price.toLocaleString('en', {minimumFractionDigits:2})}</div>
+      </div>
+    `).join('');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+</script>
+</body>
+</html>
